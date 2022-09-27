@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>观察者模式Demo</title>
+</head>
+
+<body style="text-align: center;font-size: 40px;">
+    <!-- 导航计数模块 -->
+    <div id="count"></div>
+    <!-- 聊天列表模块 -->
+    <div id="list"></div>
+    <!-- 信息发送模块 -->
+    <div id="reply"></div>
+</body>
+<script>
+    /***** 创建一个调度中心 *****/
+    class Observer {
+        constructor() {
+            this._messageHandler = {}
+            // // 私有属性
+            // let _messageHandler = {};
+            // this.setmessageHandler = function (handler) {
+            //     _messageHandler = handler;
+            // };
+            // this.getmessageHandler = function () {
+            //     return _messageHandler;
+            // };
+        }
+
+        register(type, fn) {
+            if (!this._messageHandler[type]) {
+                this._messageHandler[type] = [fn];
+                return;
+            }
+            this._messageHandler[type].push(fn);
+        };
+
+        publish(type, args) {
+            if (!this._messageHandler[type]) return;
+            const events = {
+                type,
+                args
+            };
+            this._messageHandler[type].forEach(handler => {
+                handler.call(this, events);
+            });
+
+        };
+
+        unregister(type, fn) {
+            if (!this._messageHandler[type]) return;
+            const i = this._messageHandler[type].length;
+            for (; i >= 0; i--) {
+                this._messageHandler[type][i] === fn && this._messageHandler[type].splice(i, 1);
+            }
+
+        };
+    }
+
+    const observer = new Observer();
+
+    /***** finish *****/
+
+
+    /***** 观察者1：导航计数模块 *****/
+    function navBar() {
+
+        let number = 1;
+
+        const render = function () {
+            const countModel = document.getElementById('count');
+            countModel.innerHTML = number;
+        }
+
+        const addMessage = function () {
+            number++;
+            render();
+        }
+        // 订阅messageAdd类型的信息，当发布者发布的信息类型为messageAdde时，addMessage方法将被执行
+        observer.register('messageAdd', addMessage)
+
+        render();
+    }
+
+    /***** finish *****/
+
+    /***** 观察者2：聊天列表模块 *****/
+    function messageList() {
+
+        const list = ['Hi'];
+
+        const render = function () {
+            const listModel = document.getElementById('list');
+            listModel.innerHTML = '';
+            list.forEach((message)=>{
+                const li = document.createElement('div');
+                li.innerHTML = message;
+                listModel.appendChild(li)
+            })
+        }
+
+        const addMessage = function ({args}) {
+            list.push(args);
+
+            render();
+        }
+        // 订阅messageAdd类型的信息，当发布者发布的信息类型为messageAdd时，addMessage方法将被执行
+        observer.register('messageAdd', addMessage);
+
+        render();
+    }
+
+    /***** finish *****/
+
+    /***** 发布者：信息发送模块 *****/
+
+    function messageSend() {
+
+        const pushMessage = function (e) {
+            // 点击按钮时，发布一条类型为messageAdd类型的信息
+            observer.publish('messageAdd', 'This is publisher');
+        }
+
+        const render = function () {
+            const sendModel = document.getElementById('reply');
+            const sendBtn = document.createElement('BUTTON');
+            const text = document.createTextNode("发送信息")
+            sendBtn.appendChild(text);
+            sendBtn.addEventListener('click', pushMessage)
+            sendModel.appendChild(sendBtn);
+        }
+        render();
+    }
+    /***** finish *****/
+    ;(function(){
+        navBar();
+        messageList();
+        messageSend();
+    })()
+</script>
+
+</html>
